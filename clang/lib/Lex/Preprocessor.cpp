@@ -946,6 +946,23 @@ void Preprocessor::Lex(Token &Result) {
           CurLexerKind = CLK_LexAfterModuleImport;
         }
         break;
+      } else if (Callbacks && isPreprocessedOutput() &&
+                 Result.getIdentifierInfo()->getName() == "module") {
+        std::string module_name = "";
+        while (1) {
+          if (!CurLexer->Lex(Result) || Result.getKind() == tok::semi) break;
+          if (Result.getKind() == tok::period) module_name += ".";
+          else if (Result.getKind() == tok::colon) module_name += ":";
+          else if (Result.getIdentifierInfo() != nullptr)
+            module_name += Result.getIdentifierInfo()->getName();
+        }
+        if (module_name == "") break;
+        ModuleImportPath.clear();
+        ModuleImportPath.push_back(std::make_pair(
+            getIdentifierInfo(":exp " + module_name), Result.getLocation()));
+        Callbacks->moduleImport(Result.getLocation(), ModuleImportPath,
+                                 nullptr);
+        break;
       }
       LLVM_FALLTHROUGH;
     default:
@@ -1173,6 +1190,7 @@ bool Preprocessor::LexAfterModuleImport(Token &Result) {
     ImportTok.setLength(6);
 
     auto Action = HandleHeaderIncludeOrImport(
+        /*HashLoc*/ isPreprocessedOutput() ? ImportTok.getLocation() :
         /*HashLoc*/ SourceLocation(), ImportTok, Suffix.front(), SemiLoc);
     switch (Action.Kind) {
     case ImportAction::None:
@@ -1257,6 +1275,8 @@ bool Preprocessor::LexAfterModuleImport(Token &Result) {
         FlatModuleName += ".";
       FlatModuleName += Piece.first->getName();
     }
+    if (isPreprocessedOutput())
+      FlatModuleName = ":imp " + FlatModuleName;
     SourceLocation FirstPathLoc = ModuleImportPath[0].second;
     ModuleImportPath.clear();
     ModuleImportPath.push_back(
@@ -1264,7 +1284,7 @@ bool Preprocessor::LexAfterModuleImport(Token &Result) {
   }
 
   Module *Imported = nullptr;
-  if (getLangOpts().Modules) {
+  if (getLangOpts().Modules && !isPreprocessedOutput()) {
     Imported = TheModuleLoader.loadModule(ModuleImportLoc,
                                           ModuleImportPath,
                                           Module::Hidden,

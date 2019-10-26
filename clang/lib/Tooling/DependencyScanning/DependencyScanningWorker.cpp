@@ -134,6 +134,7 @@ public:
     // We need at least one -MT equivalent for the generator to work.
     if (Opts->Targets.empty())
       Opts->Targets = {"clang-scan-deps dependency"};
+    Opts->IncludeModuleFiles = true;
 
     switch (Format) {
     case ScanningOutputFormat::Make:

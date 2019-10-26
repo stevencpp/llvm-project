@@ -94,6 +94,12 @@ struct DepCollectorPPCallbacks : public PPCallbacks {
                                     /*IsModuleFile=*/false,
                                     /*IsMissing=*/false);
   }
+  
+  void moduleImport(SourceLocation ImportLoc, ModuleIdPath Path,
+                    const Module *Imported) override {
+    StringRef ModuleName = Path[0].first->getName();
+    DepCollector.maybeAddDependency(ModuleName, true, false, true, false);
+  }
 
   void EndOfMainFile() override { DepCollector.finishedMainFile(Diags); }
 };

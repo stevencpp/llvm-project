@@ -36,7 +36,7 @@ public:
   /// occurred, dependency file contents otherwise.
   llvm::Expected<std::string>
   getDependencyFile(const tooling::CompilationDatabase &Compilations,
-                    StringRef CWD);
+                    StringRef CWD, std::size_t Input_Index);
 
 private:
   const ScanningOutputFormat Format;

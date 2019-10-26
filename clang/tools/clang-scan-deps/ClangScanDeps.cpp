@@ -197,7 +197,7 @@ int main(int argc, const char **argv) {
         tooling::CommandLineArguments AdjustedArgs = Args;
         AdjustedArgs.push_back("-o");
         AdjustedArgs.push_back("/dev/null");
-        if (!HasMT && !HasMQ) {
+        /*if (!HasMT && !HasMQ) {
           AdjustedArgs.push_back("-M");
           AdjustedArgs.push_back("-MT");
           // We're interested in source dependencies of an object file.
@@ -209,7 +209,7 @@ int main(int argc, const char **argv) {
           } else {
             AdjustedArgs.push_back(FileName);
           }
-        }
+        }*/
         AdjustedArgs.push_back("-Xclang");
         AdjustedArgs.push_back("-Eonly");
         AdjustedArgs.push_back("-Xclang");
@@ -268,7 +268,7 @@ int main(int argc, const char **argv) {
           CWD = std::move(Cmd.Directory);
         }
         // Run the tool on it.
-        auto MaybeFile = WorkerTools[I]->getDependencyFile(*Input, CWD);
+        auto MaybeFile = WorkerTools[I]->getDependencyFile(*Input, CWD, Index-1);
         if (handleDependencyToolResult(Filename, MaybeFile, DependencyOS, Errs))
           HadErrors = true;
       }

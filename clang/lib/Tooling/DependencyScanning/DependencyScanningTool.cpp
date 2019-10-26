@@ -28,7 +28,8 @@ DependencyScanningTool::DependencyScanningTool(
 }
 
 llvm::Expected<std::string> DependencyScanningTool::getDependencyFile(
-    const tooling::CompilationDatabase &Compilations, StringRef CWD) {
+    const tooling::CompilationDatabase &Compilations, StringRef CWD,
+	std::size_t Input_Index) {
   /// Prints out all of the gathered dependencies into a string.
   class MakeDependencyPrinterConsumer : public DependencyConsumer {
   public:
@@ -62,7 +63,12 @@ llvm::Expected<std::string> DependencyScanningTool::getDependencyFile(
 
         void printDependencies(std::string &S) {
           llvm::raw_string_ostream OS(S);
-          outputDependencyFile(OS);
+          //outputDependencyFile(OS);
+          ArrayRef<std::string> Files = getDependencies();
+          for (StringRef File : Files) {
+            OS << File << '\n';
+          }
+          OS << '\n';
         }
       };
 
@@ -154,7 +160,7 @@ llvm::Expected<std::string> DependencyScanningTool::getDependencyFile(
         Worker.computeDependencies(Input, CWD, Compilations, Consumer);
     if (Result)
       return std::move(Result);
-    std::string Output;
+    std::string Output = llvm::formatv(":::: {0}\n", Input_Index);
     Consumer.printDependencies(Output);
     return Output;
   } else {
